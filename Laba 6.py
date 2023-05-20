@@ -8,29 +8,21 @@
 
 from random import *
 
-o = 0
-computers = []
+o = maxs = 0
+exception = []
+maxstr = []
+combinations = []
 brands = ["Apple", "Asus", "Dell", "HP", "Lenovo", "Acer", "MSI", "Samsung"]
 
 
-def all_combinations(arr):
-    global o
-    if not arr:
-        return [[]]
-    else:
-        res = []
-        for c in all_combinations(arr[1:]):
-            if len(res) == 500000 and o == 0:
-                o = int(input('\nКолличество возможных покупок достигло 500 000.\n'
-                              'Хотите дождаться завершения работы программы? ( Да = 1 | Нет = 0 ): '))
-                while o != 0 and o != 1:
-                    o = int(input('\nПринимаются только значения "0" и "1": '))
-
-                if o == 0:
-                    print('\nРабота программы завершена.')
-                    quit()
-            res += [c, c + [arr[0]]]
-        return res
+def product(*args, repeat=1):
+    # если нет аргументов, возвращаем пустой список
+    pools = list(map(tuple, args)) * repeat
+    result = [[]]
+    for pool in pools:
+        result = [x + [y] for x in result for y in pool]
+    for prod in result:
+        yield tuple(prod)
 
 
 try:
@@ -42,16 +34,24 @@ try:
     while k < 0:
         k = int(input('\nПринимаются только положительные числа: '))
 
+    n = int(input('\nВведите кол-во типов компьютеров: '))
+    while n < 0:
+        n = int(input('\nПринимаются только положительные числа: '))
+
     # Первая часть задания
     if a == 0:
         if k > 0:
-            computers = [f'№ {i}: | {choice(brands)} |' for i in range(1, k + 1)]
+            computers = [f'| {choice(brands)} |' for i in range(1, n + 1)]
         else:
             print('\nОчень умно! Вы решили сэкономить деньги и не купили ни одного компьютера.')
             print('\nРаботы программы завершена.')
             quit()
 
-        combinations = sorted(all_combinations(computers), key=len)
+        print('\nКомпьютеры в магазине:')
+        print(str(computers)[2:-1].replace("'", ' ').replace(' , ', ', '))
+
+        for i in product(computers, repeat=k):
+            combinations.append(i)
 
         if len(combinations) > 30:
             b = int(input(f'\nКолличество возможных покупок равно {len(combinations)}.\n'
@@ -75,7 +75,7 @@ try:
                 print(f'{i+1}. {h}')
     else:
         if k > 0:
-            computers = [f'№ {i}: | {choice(brands)}, {randrange(10_999, 99_999, 1000)} р. |' for i in range(1, k + 1)]
+            computers = [f'| {choice(brands)}, {randrange(10_999, 99_999, 1000)} р. |' for i in range(1, n + 1)]
         else:
             print('\nОчень умно! Вы решили сэкономить деньги и не купили ни одного компьютера.')
             print('\nРаботы программы завершена.')
@@ -85,7 +85,7 @@ try:
               ' производитель не будет учитываться в рассмотрении его к покупке.\nТак же у каждого компьютера есть своя'
               ' стоимость. Вывести вариант покупки с максимальной суммарной стоимостью.')
 
-        print('\nКомпьютеры в наличии в магазине:')
+        print('\nКомпьютеры в магазине:')
         print(str(computers)[2:-1].replace("'", ' ').replace(' , ', ', '))
 
         if len(computers) > 1:
@@ -93,21 +93,18 @@ try:
             v = len(computers) // 2 - 1
 
             while (b - len(computers)) <= v:
-                exception = []
-
-                while len(exception) < 3:
-                    r = choice(brands)
-                    if r not in exception:
-                        exception.append(r)
+                r = choice(brands)
+                if r not in exception:
+                    exception.append(r)
 
                 for i, n in enumerate(computers):
                     for j in exception:
                         if j in n:
                             computers.pop(i)
-
-            for i in exception:
-                o = f'{o} {i}'
-            print('\nНекачественные производители:', o[2::])
+            else:
+                for i in exception:
+                    o = f'{o} {i}'
+                print('\nНекачественные производители:', o[2::])
 
         else:
             exception = []
@@ -130,7 +127,15 @@ try:
             print('\nКомпьютеры подлежащие выбору:')
             print(str(computers)[2:-1].replace("'", ' ').replace(' , ', ', '))
 
-            combinations = sorted(all_combinations(computers), key=len)[1:]
+            s = 0
+            for i in product(computers, repeat=k):
+                s = 0
+                combinations.append(i)
+                for j in i:
+                    s += int(j[-10:-5])
+                if s >= maxs:
+                    maxs = s
+                    maxstr = i
 
             if len(combinations) > 30:
                 b = int(input(f'\nКолличество возможных покупок равно {len(combinations)}.\n'
@@ -153,8 +158,8 @@ try:
             s = [int(str(i)[-10:-5]) for i in computers]
 
             print('\nВариант самой дорогой покупки: ')
-            print(f'Сумма покупки: {sum(s)} руб.')
-            print(str(computers[::-1])[4:-2].replace("'", ' ').replace(' , ', ', '))
+            print(f'Сумма покупки: {maxs} руб.')
+            print(str(maxstr[::-1])[4:-2].replace("'", ' ').replace(' , ', ', '))
 
         else:
             print('\nКажется, сегодня мы остались без покупок.')
